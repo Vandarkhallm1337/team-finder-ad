@@ -3,11 +3,7 @@ from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import (
-    DetailView,
-    UpdateView,
-    ListView
-)
+from django.views.generic import DetailView, UpdateView, ListView
 from django.views.generic.edit import FormView
 
 from .models import User
@@ -15,22 +11,22 @@ from .forms import (
     RegisterForm,
     LoginForm,
     ProfileForm,
-    PasswordThreePolesChangeForm
+    PasswordThreePolesChangeForm,
 )
 from .constants import (
     PAGINATE,
     OWNERS_ON_FAVORITE,
     OWNERS_OF_PARTICIPATING,
     INTERESTED_MY_PROJ,
-    PARTICIPANTS_OF_MY_PROJ
-    )
+    PARTICIPANTS_OF_MY_PROJ,
+)
 from core.mixins import SelfOrAdminRequiredMixin
 
 
 class RegisterView(FormView):
-    template_name = 'users/register.html'
+    template_name = "users/register.html"
     form_class = RegisterForm
-    success_url = reverse_lazy('projects:project-list')
+    success_url = reverse_lazy("projects:project-list")
 
     def form_valid(self, form):
         user = form.save()
@@ -39,9 +35,9 @@ class RegisterView(FormView):
 
 
 class LoginWithEmailView(FormView):
-    template_name = 'users/login.html'
+    template_name = "users/login.html"
     form_class = LoginForm
-    success_url = reverse_lazy('projects:project-list')
+    success_url = reverse_lazy("projects:project-list")
 
     def form_valid(self, form):
         login(self.request, form.get_user())
@@ -51,39 +47,38 @@ class LoginWithEmailView(FormView):
 
 class UserDetailView(DetailView):
     model = User
-    template_name = 'users/user-details.html'
-    context_object_name = 'user'
+    template_name = "users/user-details.html"
+    context_object_name = "user"
 
-    pk_url_kwarg = 'id'
+    pk_url_kwarg = "id"
 
 
-class ProfileUpdateView(LoginRequiredMixin,
-                        SelfOrAdminRequiredMixin,
-                        UpdateView):
+class ProfileUpdateView(
+    LoginRequiredMixin, SelfOrAdminRequiredMixin, UpdateView
+):
     model = User
     form_class = ProfileForm
-    template_name = 'users/edit_profile.html'
+    template_name = "users/edit_profile.html"
 
     def get_object(self):
         return self.request.user
 
     def get_success_url(self):
         return reverse(
-            'users:user-details',
-            kwargs={'id': self.request.user.id}
+            "users:user-details", kwargs={"id": self.request.user.id}
         )
 
 
 class UserListView(ListView):
     model = User
-    template_name = 'users/participants.html'
-    context_object_name = 'participants'
+    template_name = "users/participants.html"
+    context_object_name = "participants"
     paginate_by = PAGINATE
 
     def get_queryset(self):
-        queryset = User.objects.all().order_by('-last_login')
+        queryset = User.objects.all().order_by("-last_login")
 
-        filter_type = self.request.GET.get('filter')
+        filter_type = self.request.GET.get("filter")
 
         if self.request.user.is_authenticated:
             if filter_type == OWNERS_ON_FAVORITE:
@@ -112,22 +107,21 @@ class UserListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context['active_filter'] = self.request.GET.get('filter')
+        context["active_filter"] = self.request.GET.get("filter")
 
         return context
 
 
 class PasswordThreePolesChangeView(LoginRequiredMixin, PasswordChangeView):
-    template_name = 'users/change_password.html'
+    template_name = "users/change_password.html"
     form_class = PasswordThreePolesChangeForm
 
     def get_success_url(self):
         return reverse(
-            'users:user-details',
-            kwargs={'id': self.request.user.id}
+            "users:user-details", kwargs={"id": self.request.user.id}
         )
 
 
 def logout_view(request):
     logout(request)
-    return redirect('projects:project-list')
+    return redirect("projects:project-list")

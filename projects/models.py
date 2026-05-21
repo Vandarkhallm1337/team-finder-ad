@@ -5,7 +5,7 @@ from projects.constants import (
     STATUS_CHOICES,
     MAX_LENGTH_NAME,
     MAX_LENGTH_STATUS,
-    STATUS_OPEN_LOWER
+    STATUS_OPEN_LOWER,
 )
 
 User = settings.AUTH_USER_MODEL
@@ -18,9 +18,7 @@ class Project(models.Model):
     description = models.TextField(blank=True)
 
     owner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='owned_projects'
+        User, on_delete=models.CASCADE, related_name="owned_projects"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -28,14 +26,11 @@ class Project(models.Model):
     github_url = models.URLField(blank=True, null=True)
 
     status = models.CharField(
-        max_length=MAX_LENGTH_STATUS,
-        choices=STATUS_CHOICES
+        max_length=MAX_LENGTH_STATUS, choices=STATUS_CHOICES
     )
 
     participants = models.ManyToManyField(
-        User,
-        related_name='participated_projects',
-        blank=True
+        User, related_name="participated_projects", blank=True
     )
 
     def __str__(self):

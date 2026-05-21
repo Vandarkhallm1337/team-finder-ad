@@ -10,7 +10,7 @@ from .constants import (
     MAX_LENGTH_SURNAME,
     UPLOAD_FILE,
     MAX_LENGTH_PHONE,
-    MAX_LENGTH_ABOUT
+    MAX_LENGTH_ABOUT,
 )
 
 
@@ -29,21 +29,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
 
     favorites = models.ManyToManyField(
-        'projects.Project',
-        related_name='interested_users',
-        blank=True
+        "projects.Project", related_name="interested_users", blank=True
     )
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name', 'surname']
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["name", "surname"]
 
     objects = UserManager()
 
     def save(self, *args, **kwargs):
         if not self.avatar:
             avatar_content = generate_avatar(self.name[0])
-            self.avatar.save(f'{self.email}.png', ContentFile(avatar_content),
-                             save=False)
+            self.avatar.save(
+                f"{self.email}.png", ContentFile(avatar_content), save=False
+            )
 
         super().save(*args, **kwargs)
 
@@ -52,4 +51,4 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def full_name(self):
-        return f'{self.name} {self.surname}'
+        return f"{self.name} {self.surname}"

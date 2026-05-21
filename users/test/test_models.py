@@ -6,7 +6,7 @@ from users.constants import (
     USER_PASSWORD,
     USER_NAME,
     USER_SURNAME,
-    FULL_NAME
+    FULL_NAME,
 )
 
 
@@ -18,19 +18,13 @@ class UserModelTest(TestCase):
             email=USER_LOGIN,
             password=USER_PASSWORD,
             name=USER_NAME,
-            surname=USER_SURNAME
+            surname=USER_SURNAME,
         )
 
     def test_user_string_representation(self):
 
-        self.assertEqual(
-            str(self.user),
-            USER_LOGIN
-        )
+        self.assertEqual(str(self.user), USER_LOGIN)
 
     def test_full_name_property(self):
 
-        self.assertEqual(
-            self.user.full_name,
-            FULL_NAME
-        )
+        self.assertEqual(self.user.full_name, FULL_NAME)
