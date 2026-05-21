@@ -1,13 +1,19 @@
 from django.db import models
 from django.conf import settings
-from core.constants import STATUS_CHOICES
+
+from projects.constants import (
+    STATUS_CHOICES,
+    MAX_LENGTH_NAME,
+    MAX_LENGTH_STATUS,
+    STATUS_OPEN_LOWER
+)
 
 User = settings.AUTH_USER_MODEL
 
 
 class Project(models.Model):
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=MAX_LENGTH_NAME)
 
     description = models.TextField(blank=True)
 
@@ -22,7 +28,7 @@ class Project(models.Model):
     github_url = models.URLField(blank=True, null=True)
 
     status = models.CharField(
-        max_length=6,
+        max_length=MAX_LENGTH_STATUS,
         choices=STATUS_CHOICES
     )
 
@@ -49,4 +55,4 @@ class Project(models.Model):
 
     @property
     def is_open(self):
-        return self.status == 'open'
+        return self.status == STATUS_OPEN_LOWER

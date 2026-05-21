@@ -1,24 +1,31 @@
+from http import HTTPStatus
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse
 from django.views.generic import (
     ListView,
     DetailView,
     CreateView,
     UpdateView
 )
+
 from .models import Project
 from .forms import ProjectForm
 from core.mixins import OwnerOrAdminRequiredMixin
+from .constants import (
+    PAGINATE,
+    STATUS_CLOSE_LOWER
+)
 
 
 class ProjectListView(ListView):
     model = Project
     template_name = 'projects/project_list.html'
     context_object_name = 'projects'
-    paginate_by = 12
+    paginate_by = PAGINATE
 
     def get_queryset(self):
 
@@ -66,7 +73,7 @@ class ProjectCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'projects:project-detail',
             kwargs={'id': self.object.id}
         )
@@ -90,7 +97,7 @@ class ProjectUpdateView(
     pk_url_kwarg = 'id'
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'projects:project-detail',
             kwargs={'id': self.object.id}
         )
@@ -105,15 +112,16 @@ class ProjectUpdateView(
 
 @login_required
 def toggle_favorite(request, id):
-    project = get_object_or_404(Project, id=id)
-
-    if project in request.user.favorites.all():
+    project = Project.objects.filter(id=id).first()
+    if project is None:
+        return JsonResponse({'status': 'error',
+                             'message': 'Project not found'},
+                            status=HTTPStatus.NOT_FOUND)
+    favorited = request.user.favorites.filter(id=project.id).exists()
+    if favorited:
         request.user.favorites.remove(project)
-        favorited = False
     else:
         request.user.favorites.add(project)
-        favorited = True
-
     return JsonResponse({
         'status': 'ok',
         'favorited': favorited
@@ -122,44 +130,49 @@ def toggle_favorite(request, id):
 
 @login_required
 def toggle_participate(request, id):
-
-    project = get_object_or_404(Project, id=id)
-
-    if project.status == 'closed':
-        return JsonResponse({'status': 'error'}, status=400)
-
+    project = Project.objects.filter(id=id).first()
+    if project is None:
+        return JsonResponse({'status': 'error',
+                            'message': 'Project not found'},
+                            status=HTTPStatus.NOT_FOUND)
+    if project.status == STATUS_CLOSE_LOWER:
+        return JsonResponse({'status': 'error',
+                            'message': 'Project is closed'},
+                            status=HTTPStatus.BAD_REQUEST)
     if request.user == project.owner:
-        return JsonResponse({'status': 'owner_cannot_join'}, status=400)
-
-    if request.user in project.participants.all():
+        return JsonResponse({'status': 'owner_cannot_join'},
+                            status=HTTPStatus.BAD_REQUEST)
+    is_participating = project.participants.filter(id=request.user.id).exists()
+    if is_participating:
         project.participants.remove(request.user)
         action = 'removed'
     else:
         project.participants.add(request.user)
         action = 'added'
-
-    return JsonResponse(
-        {
-            'status': 'ok',
-            'action': action,
-            'participants_count': project.participants.count()
-        }
-    )
+    return JsonResponse({
+        'status': 'ok',
+        'action': action,
+        'participants_count': project.participants.count()
+    })
 
 
 @login_required
 def complete_project(request, id):
-    project = get_object_or_404(Project, id=id)
-
-    if (project.owner != request.user and not request.user.is_staff):
-        return JsonResponse({'status': 'error'}, status=403)
-
-    if project.status == 'closed':
-        return JsonResponse({'status': 'error'}, status=400)
-
-    project.status = 'closed'
+    project = Project.objects.filter(id=id).first()
+    if project is None:
+        return JsonResponse({'status': 'error',
+                            'message': 'Project not found'},
+                            status=HTTPStatus.NOT_FOUND)
+    if project.owner != request.user and not request.user.is_staff:
+        return JsonResponse({'status': 'error'}, status=HTTPStatus.FORBIDDEN)
+    if project.status == STATUS_CLOSE_LOWER:
+        return JsonResponse({'status': 'error',
+                            'message': 'Project is already closed'},
+                            status=HTTPStatus.BAD_REQUEST)
+    project.status = STATUS_CLOSE_LOWER
     project.save()
+
     return JsonResponse({
         'status': 'ok',
-        'project_status': 'closed'
+        'project_status': STATUS_CLOSE_LOWER
     })

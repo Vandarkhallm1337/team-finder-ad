@@ -1,5 +1,13 @@
 from django.test import TestCase
+
 from users.forms import RegisterForm
+from users.constants import (
+    USER_LOGIN,
+    USER_PASSWORD,
+    USER_NAME,
+    USER_SURNAME,
+    USER_WRONG_MAIL
+)
 
 
 class RegisterFormTest(TestCase):
@@ -7,10 +15,10 @@ class RegisterFormTest(TestCase):
     def test_valid_form(self):
 
         form_data = {
-            'email': 'test@test.com',
-            'name': 'John',
-            'surname': 'Doe',
-            'password': 'StrongPassword123',
+            'email': USER_LOGIN,
+            'name': USER_NAME,
+            'surname': USER_SURNAME,
+            'password': USER_PASSWORD,
         }
 
         form = RegisterForm(data=form_data)
@@ -20,10 +28,10 @@ class RegisterFormTest(TestCase):
     def test_wrong_email(self):
 
         form_data = {
-            'email': '111',
-            'name': 'John',
-            'surname': 'Doe',
-            'password': '12345678',
+            'email': USER_WRONG_MAIL,
+            'name': USER_NAME,
+            'surname': USER_SURNAME,
+            'password': USER_PASSWORD,
         }
 
         form = RegisterForm(data=form_data)
@@ -33,7 +41,7 @@ class RegisterFormTest(TestCase):
     def test_email_required(self):
 
         form_data = {
-            'password': '12345678',
+            'password': USER_PASSWORD,
         }
 
         form = RegisterForm(data=form_data)

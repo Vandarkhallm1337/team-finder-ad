@@ -1,7 +1,20 @@
+from http import HTTPStatus
+
 from django.test import TestCase
 from django.urls import reverse
+
 from users.models import User
 from projects.models import Project
+from projects.constants import (
+    TEST_USER_LOGIN,
+    TEST_USER_PASSWORD,
+    TEST_USER_NAME,
+    TEST_USER_SURNAME,
+    TEST_PROJECT_DESCRIPTION,
+    TEST_PROJECT_NAME,
+    TEST_USER_OTHER_NAME,
+    TEST_USER_OTHER_LOGIN
+)
 
 
 class ProjectPermissionsTest(TestCase):
@@ -9,22 +22,22 @@ class ProjectPermissionsTest(TestCase):
     def setUp(self):
 
         self.owner = User.objects.create_user(
-            email='owner@test.com',
-            password='12345',
-            name='Owner',
-            surname='User'
+            email=TEST_USER_LOGIN,
+            password=TEST_USER_PASSWORD,
+            name=TEST_USER_NAME,
+            surname=TEST_USER_SURNAME
         )
 
         self.other_user = User.objects.create_user(
-            email='other@test.com',
-            password='12345',
-            name='Other',
-            surname='User'
+            email=TEST_USER_OTHER_LOGIN,
+            password=TEST_USER_PASSWORD,
+            name=TEST_USER_OTHER_NAME,
+            surname=TEST_USER_SURNAME
         )
 
         self.project = Project.objects.create(
-            name='Project',
-            description='Description',
+            name=TEST_PROJECT_NAME,
+            description=TEST_PROJECT_DESCRIPTION,
             owner=self.owner
         )
 
@@ -34,7 +47,7 @@ class ProjectPermissionsTest(TestCase):
             reverse('projects:create-project')
         )
 
-        self.assertNotEqual(response.status_code, 200)
+        self.assertNotEqual(response.status_code, HTTPStatus.OK)
 
     def test_guest_cannot_join_project(self):
 
@@ -45,13 +58,13 @@ class ProjectPermissionsTest(TestCase):
             )
         )
 
-        self.assertNotEqual(response.status_code, 403)
+        self.assertNotEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
     def test_owner_can_edit_project(self):
 
         self.client.login(
-            email='owner@test.com',
-            password='12345678'
+            email=TEST_USER_LOGIN,
+            password=TEST_USER_PASSWORD
         )
 
         response = self.client.get(
@@ -61,13 +74,13 @@ class ProjectPermissionsTest(TestCase):
             )
         )
 
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_other_user_cannot_edit_project(self):
 
         self.client.login(
-            email='other@test.com',
-            password='12345678'
+            email=TEST_USER_OTHER_LOGIN,
+            password=TEST_USER_PASSWORD
         )
 
         response = self.client.get(
@@ -77,4 +90,4 @@ class ProjectPermissionsTest(TestCase):
             )
         )
 
-        self.assertNotEqual(response.status_code, 200)
+        self.assertNotEqual(response.status_code, HTTPStatus.OK)

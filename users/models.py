@@ -1,36 +1,29 @@
-import random
-from io import BytesIO
 from django.db import models
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.files.base import ContentFile
-from PIL import Image, ImageDraw
+
 from .managers import UserManager
-
-
-def generate_avatar(letter):
-    img = Image.new('RGB', (200, 200), color=random.choice([
-        '#FF5733', '#33C1FF', '#75FF33', '#FF33A8'
-    ]))
-
-    draw = ImageDraw.Draw(img)
-    draw.text((80, 70), letter.upper(), fill='white')
-
-    buffer = BytesIO()
-    img.save(buffer, format='PNG')
-    return buffer.getvalue()
+from .utils import generate_avatar
+from .constants import (
+    MAX_LENGTH_NAME,
+    MAX_LENGTH_SURNAME,
+    UPLOAD_FILE,
+    MAX_LENGTH_PHONE,
+    MAX_LENGTH_ABOUT
+)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    name = models.CharField(max_length=124)
-    surname = models.CharField(max_length=124)
+    name = models.CharField(max_length=MAX_LENGTH_NAME)
+    surname = models.CharField(max_length=MAX_LENGTH_SURNAME)
 
-    avatar = models.ImageField(upload_to='avatars/', blank=True)
-    phone = models.CharField(max_length=12)
+    avatar = models.ImageField(upload_to=UPLOAD_FILE, blank=True)
+    phone = models.CharField(max_length=MAX_LENGTH_PHONE)
 
     github_url = models.URLField(blank=True, null=True)
-    about = models.TextField(max_length=256, blank=True)
+    about = models.TextField(max_length=MAX_LENGTH_ABOUT, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

@@ -2,6 +2,14 @@ from django.test import TestCase
 
 from users.models import User
 from projects.models import Project
+from projects.constants import (
+    TEST_USER_LOGIN,
+    TEST_USER_PASSWORD,
+    TEST_USER_NAME,
+    TEST_USER_SURNAME,
+    TEST_PROJECT_DESCRIPTION,
+    TEST_PROJECT_NAME
+)
 
 
 class ProjectModelTest(TestCase):
@@ -9,15 +17,15 @@ class ProjectModelTest(TestCase):
     def setUp(self):
 
         self.user = User.objects.create_user(
-            email='owner@test.com',
-            password='12345',
-            name='Project',
-            surname='Owner'
+            email=TEST_USER_LOGIN,
+            password=TEST_USER_PASSWORD,
+            name=TEST_USER_NAME,
+            surname=TEST_USER_SURNAME
         )
 
         self.project = Project.objects.create(
-            name='Test Project',
-            description='Description',
+            name=TEST_PROJECT_NAME,
+            description=TEST_PROJECT_DESCRIPTION,
             owner=self.user
         )
 
@@ -25,7 +33,7 @@ class ProjectModelTest(TestCase):
 
         self.assertEqual(
             str(self.project),
-            'Test Project'
+            TEST_PROJECT_NAME
         )
 
     def test_project_owner(self):

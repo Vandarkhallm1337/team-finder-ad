@@ -2,13 +2,14 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     DetailView,
     UpdateView,
     ListView
 )
 from django.views.generic.edit import FormView
+
 from .models import User
 from .forms import (
     RegisterForm,
@@ -16,6 +17,13 @@ from .forms import (
     ProfileForm,
     PasswordThreePolesChangeForm
 )
+from .constants import (
+    PAGINATE,
+    OWNERS_ON_FAVORITE,
+    OWNERS_OF_PARTICIPATING,
+    INTERESTED_MY_PROJ,
+    PARTICIPANTS_OF_MY_PROJ
+    )
 from core.mixins import SelfOrAdminRequiredMixin
 
 
@@ -60,7 +68,7 @@ class ProfileUpdateView(LoginRequiredMixin,
         return self.request.user
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'users:user-details',
             kwargs={'id': self.request.user.id}
         )
@@ -70,7 +78,7 @@ class UserListView(ListView):
     model = User
     template_name = 'users/participants.html'
     context_object_name = 'participants'
-    paginate_by = 12
+    paginate_by = PAGINATE
 
     def get_queryset(self):
         queryset = User.objects.all().order_by('-last_login')
@@ -78,23 +86,23 @@ class UserListView(ListView):
         filter_type = self.request.GET.get('filter')
 
         if self.request.user.is_authenticated:
-            if filter_type == 'owners-of-favorite-projects':
+            if filter_type == OWNERS_ON_FAVORITE:
                 favorite_projects = self.request.user.favorites.all()
                 queryset = User.objects.filter(
                     owned_projects__in=favorite_projects
                 ).distinct()
 
-            elif filter_type == 'owners-of-participating-projects':
+            elif filter_type == OWNERS_OF_PARTICIPATING:
                 queryset = User.objects.filter(
                     owned_projects__participants=self.request.user
                 ).distinct()
 
-            elif filter_type == 'interested-in-my-projects':
+            elif filter_type == INTERESTED_MY_PROJ:
                 queryset = User.objects.filter(
                     favorites__owner=self.request.user
                 ).distinct()
 
-            elif filter_type == 'participants-of-my-projects':
+            elif filter_type == PARTICIPANTS_OF_MY_PROJ:
                 queryset = User.objects.filter(
                     participated_projects__owner=self.request.user
                 ).distinct()
@@ -114,7 +122,7 @@ class PasswordThreePolesChangeView(LoginRequiredMixin, PasswordChangeView):
     form_class = PasswordThreePolesChangeForm
 
     def get_success_url(self):
-        return reverse_lazy(
+        return reverse(
             'users:user-details',
             kwargs={'id': self.request.user.id}
         )
